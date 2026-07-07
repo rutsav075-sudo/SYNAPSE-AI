@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Package, TrendingUp, AlertTriangle, Crosshair, Loader2 } from 'lucide-react';
 import { useSynapse } from '../../context/SynapseContext';
 
-const GEMINI_API_KEY = "";
 
 const SellerToolsPage = () => {
   const { products } = useSynapse();
@@ -14,6 +13,11 @@ const SellerToolsPage = () => {
   ]);
 
   const handleGenerateInsights = async () => {
+    const apiKey = localStorage.getItem('geminiApiKey');
+    if (!apiKey) {
+      setAiSuggestion("Please configure your Gemini API Key in the Settings page to enable AI suggestions.");
+      return;
+    }
     setLoading(true);
     try {
       const productSummary = products.map(p => ({ name: p.name || 'Unknown', price: p.price || 0, category: p.category || 'General' }));
@@ -26,7 +30,7 @@ const SellerToolsPage = () => {
       }
       If the catalog is empty, generate generic insights for a SaaS business. Generate exactly 2 competitor insight rows based on the catalog.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

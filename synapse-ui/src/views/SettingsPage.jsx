@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Shield, Database } from 'lucide-react';
+import { LogOut, User, Shield, Database, Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SettingsPage = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState(localStorage.getItem('geminiApiKey') || '');
+
+  const saveApiKey = () => {
+    localStorage.setItem('geminiApiKey', geminiApiKey);
+    // Could add a toast here instead of alert, but keeping it simple
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -72,6 +78,35 @@ const SettingsPage = () => {
             >
               <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all duration-300 shadow-sm ${twoFactorEnabled ? 'bg-cyan-300 left-[22px]' : 'bg-slate-500 left-1'}`} />
             </button>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'api-config',
+      title: 'API Configuration',
+      icon: Key,
+      description: 'Configure your external API keys for AI services.',
+      content: (
+        <div className="space-y-4 text-left">
+          <div className="text-left">
+            <label className="text-xs font-semibold text-slate-400 block mb-1">Google Gemini API Key</label>
+            <div className="flex items-center gap-3">
+              <input 
+                type="password" 
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                placeholder="Enter your Gemini API key..." 
+                className="w-full bg-black/20 border border-white/10 text-slate-200 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 rounded-lg px-4 py-2 text-sm outline-none transition-colors" 
+              />
+              <button 
+                onClick={saveApiKey}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-cyan-500/20"
+              >
+                Save
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2">Your key is stored securely in your browser's local storage.</p>
           </div>
         </div>
       )
