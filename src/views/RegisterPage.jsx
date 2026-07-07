@@ -18,7 +18,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       await signUp(email, password, name);
-      addToast('success', 'Account Created', 'Registration successful. You can now sign in.');
+      addToast('success', 'Verification Required', 'Please check your inbox and verify your email address to complete registration.');
       navigate('/login');
     } catch (error) {
       addToast('error', 'Registration Failed', error.message || 'Could not create account');
