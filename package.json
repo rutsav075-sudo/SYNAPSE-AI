@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "postinstall": "node patch-n8n.js"
+    "postinstall": "node patch-n8n.cjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
