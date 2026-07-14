@@ -1,13 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSynapse } from '../context/SynapseContext';
-import synapseLogo from '../assets/synapse-logo.png';
+
+const ASCIIBackground = () => {
+  const [grid, setGrid] = useState('');
+
+  useEffect(() => {
+    // Generate a static ASCII grid for the background
+    const cols = Math.floor(window.innerWidth / 12); // approx width of a mono character
+    const rows = Math.floor(window.innerHeight / 14); // approx height
+    let pattern = '';
+    
+    for (let r = 0; r < rows; r++) {
+      let rowStr = '';
+      for (let c = 0; c < cols; c++) {
+        // Minimalist tech grid: mostly dots or pluses, occasional empty space
+        if (r % 4 === 0 && c % 8 === 0) rowStr += '+';
+        else if (r % 4 === 0) rowStr += '-';
+        else if (c % 8 === 0) rowStr += '|';
+        else rowStr += ' ';
+      }
+      pattern += rowStr + '\\n';
+    }
+    setGrid(pattern);
+
+    const handleResize = () => {
+      // Re-run on resize
+      const newCols = Math.floor(window.innerWidth / 12);
+      const newRows = Math.floor(window.innerHeight / 14);
+      let newPattern = '';
+      for (let r = 0; r < newRows; r++) {
+        let rowStr = '';
+        for (let c = 0; c < newCols; c++) {
+          if (r % 4 === 0 && c % 8 === 0) rowStr += '+';
+          else if (r % 4 === 0) rowStr += '-';
+          else if (c % 8 === 0) rowStr += '|';
+          else rowStr += ' ';
+        }
+        newPattern += rowStr + '\\n';
+      }
+      setGrid(newPattern);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center bg-white text-[#f0f0f0]">
+      <pre className="font-mono text-xs leading-[14px] whitespace-pre m-0 p-0 select-none">
+        {grid}
+      </pre>
+    </div>
+  );
+};
 
 const RegisterPage = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { addToast } = useSynapse();
@@ -17,9 +70,9 @@ const RegisterPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, name);
-      addToast('success', 'Verification Required', 'Please check your inbox and verify your email address to complete registration.');
-      navigate('/login');
+      await signUp(email, password, fullName);
+      addToast('success', 'Account Created', 'Your account has been created successfully.');
+      navigate('/app');
     } catch (error) {
       addToast('error', 'Registration Failed', error.message || 'Could not create account');
     } finally {
@@ -28,79 +81,86 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-950/20 overflow-hidden font-sans p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white font-sans relative overflow-hidden">
       
-      {/* Background Looping Video */}
-      <video
-        className="absolute inset-0 w-full h-full object-cover -z-20 opacity-80"
-        autoPlay
-        loop
-        muted
-        playsInline
-      >
-        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4" type="video/mp4" />
-      </video>
+      {/* ASCII Background Layer */}
+      <ASCIIBackground />
 
-      {/* Ambient Glow Blobs */}
-      <div className="absolute top-[20%] left-[10%] w-[350px] h-[350px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute bottom-[30%] right-[15%] w-[450px] h-[450px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none -z-10" />
-      
-      <div className="w-full max-w-md bg-slate-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] z-10 relative">
-        <div className="flex justify-center mb-6">
-          <div className="w-48 h-16 bg-contain bg-no-repeat bg-center mix-blend-screen" style={{ backgroundImage: `url(${synapseLogo})` }} />
+      {/* Main Content Box */}
+      <div className="w-full max-w-sm bg-white border border-black/10 rounded-none p-10 relative z-10 flex flex-col shadow-none">
+        
+        <div className="mb-10 text-center">
+          <span className="font-display font-bold text-3xl tracking-tighter text-black">Synapse OS</span>
         </div>
         
-        <h1 className="text-2xl font-bold text-white text-center mb-2">Request Access</h1>
-        <p className="text-sm text-text-tertiary text-center mb-8">Join Synapse OS to build autonomous workflows</p>
+        <h1 className="text-xl font-display font-medium text-black mb-2 text-left tracking-tight">Request Access</h1>
+        <p className="text-sm text-black/60 mb-8 text-left">Provision your enterprise data pipeline.</p>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-xs font-semibold text-text-secondary mb-1.5 block">Full Name</label>
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-black block">Full name</label>
             <input 
               type="text" 
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary-accent transition-colors" 
-              placeholder="John Doe" 
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full bg-transparent border-b border-black/20 px-0 py-2 text-sm text-black outline-none transition-colors focus:border-black placeholder:text-black/30 rounded-none" 
+              placeholder="System Administrator" 
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-text-secondary mb-1.5 block">Email Address</label>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-black block">Email address</label>
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary-accent transition-colors" 
-              placeholder="you@company.com" 
+              className="w-full bg-transparent border-b border-black/20 px-0 py-2 text-sm text-black outline-none transition-colors focus:border-black placeholder:text-black/30 rounded-none" 
+              placeholder="user@enterprise.com" 
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-text-secondary mb-1.5 block">Password</label>
-            <input 
-              type="password" 
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary-accent transition-colors" 
-              placeholder="••••••••" 
-            />
+          
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-black block">Password</label>
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent border-b border-black/20 px-0 py-2 pr-8 text-sm text-black outline-none transition-colors focus:border-black placeholder:text-black/30 rounded-none" 
+                placeholder="••••••••" 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition-colors focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                )}
+              </button>
+            </div>
           </div>
           
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-3 mt-4 rounded-xl bg-white text-background font-bold text-sm hover:bg-gray-200 transition-colors shadow-lg disabled:opacity-50"
+            className="w-full py-3 mt-8 rounded-none bg-black text-white font-medium text-sm hover:bg-black/90 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : 'Sign Up'}
+            {loading ? 'Provisioning...' : 'Submit Request'}
           </button>
         </form>
         
-        <p className="text-xs text-center text-text-tertiary mt-6">
-          Already have an account? <Link to="/login" className="text-white font-semibold hover:underline">Sign in</Link>
-        </p>
+        <div className="mt-10 border-t border-black/10 pt-6">
+          <p className="text-[13px] text-left text-black/60">
+            Already cleared? <Link to="/login" className="text-black font-medium hover:underline underline-offset-2 transition-all">Sign in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

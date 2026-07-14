@@ -248,7 +248,7 @@ export function NeuralCore() {
   }, [inputValue, isThinking, messages, activeConversation, navigate, user])
   
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+    <div className="h-screen flex flex-col relative overflow-hidden bg-transparent text-foreground">
       {/* Dynamic Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" />
       

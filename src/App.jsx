@@ -4,7 +4,6 @@ import { SynapseProvider } from './context/SynapseContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout/Layout';
 import Toast from './components/Toast/Toast';
-import LandingPage from './views/LandingPage';
 import LoginPage from './views/LoginPage';
 import RegisterPage from './views/RegisterPage';
 import OrchestrationEditor from './views/OrchestrationEditor';
@@ -12,6 +11,17 @@ import MultiModalInbox from './views/MultiModalInbox';
 import CommandCenter from './views/CommandCenter';
 import SettingsPage from './views/SettingsPage'; 
 import NeuralCorePage from './views/NeuralCorePage';
+import './framer-styles.css';
+
+// Framer Pages
+import FramerIndex from './views/FramerPages/FramerIndex';
+import AboutPage from './views/FramerPages/AboutPage';
+import AcceptableUsePage from './views/FramerPages/AcceptableUsePage';
+import CareersPage from './views/FramerPages/CareersPage';
+import CaseStudiesPage from './views/FramerPages/CaseStudiesPage';
+import ContactPage from './views/FramerPages/ContactPage';
+import PrivacyPolicyPage from './views/FramerPages/PrivacyPolicyPage';
+import TermsAndConditionsPage from './views/FramerPages/TermsAndConditionsPage';
 // A wrapper for authenticated routes
 function RequireAuth({ children }) {
   const { session, loading } = useAuth();
@@ -35,7 +45,15 @@ function RequireAuth({ children }) {
 function AppContent() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<FramerIndex />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/acceptable-use" element={<AcceptableUsePage />} />
+      <Route path="/careers" element={<CareersPage />} />
+      <Route path="/case-studies" element={<CaseStudiesPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+      
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       

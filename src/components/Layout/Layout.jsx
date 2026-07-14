@@ -1,17 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Mail, Settings, HeadphonesIcon, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Package, Mail, Settings, HeadphonesIcon, Sparkles, Menu, X } from 'lucide-react';
 import { useSynapse } from '../../context/SynapseContext';
 import { useAuth } from '../../context/AuthContext';
-import synapseLogo from '../../assets/synapse-logo.png';
-
 import OrchestrationEditor from '../../views/OrchestrationEditor';
+
+const ASCIIBackground = () => {
+  const [grid, setGrid] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => {
+      const cols = Math.floor(window.innerWidth / 12);
+      const rows = Math.floor(window.innerHeight / 14);
+      let pattern = '';
+      for (let r = 0; r < rows; r++) {
+        let rowStr = '';
+        for (let c = 0; c < cols; c++) {
+          if (r % 8 === 0 && c % 16 === 0) rowStr += '+';
+          else if (r % 8 === 0) rowStr += '-';
+          else if (c % 16 === 0) rowStr += '|';
+          else rowStr += ' ';
+        }
+        pattern += rowStr + '\n';
+      }
+      setGrid(pattern);
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center bg-white dark:bg-black text-black/10 dark:text-white/5 transition-colors duration-500">
+      <pre className="font-mono text-xs leading-[14px] whitespace-pre m-0 p-0 select-none">
+        {grid}
+      </pre>
+    </div>
+  );
+};
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingApprovals, agentStatuses } = useSynapse();
   const { user } = useAuth();
+  
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }, []);
 
   const pendingCount = pendingApprovals.filter(a => a.status === 'pending').length;
   const onlineCount = Object.values(agentStatuses).filter(a => a.status !== 'offline').length;
@@ -25,54 +65,60 @@ const Layout = () => {
   ];
 
   const isOrchestrationActive = location.pathname === '/app/orchestration';
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   return (
-    <div className="relative h-screen w-full flex overflow-hidden bg-slate-950/20 backdrop-blur-[2px] text-text-primary font-sans bg-fixed bg-center bg-cover">
+    <div className="relative h-screen w-full flex overflow-hidden font-sans bg-transparent">
       
-      {/* Background Looping Video */}
-      <video
-        className="absolute inset-0 w-full h-full object-cover -z-20 opacity-80"
-        autoPlay
-        loop
-        muted
-        playsInline
-      >
-        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4" type="video/mp4" />
-      </video>
+      {/* Dynamic ASCII Background */}
+      <ASCIIBackground />
 
       {/* Ambient Glow Blobs */}
-      <div className="absolute top-[20%] left-[10%] w-[350px] h-[350px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute bottom-[30%] right-[15%] w-[450px] h-[450px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-[20%] left-[10%] w-[350px] h-[350px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-[30%] right-[15%] w-[450px] h-[450px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
-      {/* Thin Icon Rail */}
-      <nav className="w-16 h-full bg-white/5 backdrop-blur-2xl border-r border-white/10 flex flex-col items-center py-6 shrink-0 z-20 shadow-2xl">
+      {/* Mobile Top Bar - Glassmorphic */}
+      <div className="md:hidden absolute top-0 left-0 w-full h-16 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md border-b border-black/10 dark:border-white/10 z-50 flex items-center justify-between px-4 transition-colors">
+        <div className="font-display font-bold text-xl text-black dark:text-white tracking-tighter cursor-pointer" onClick={() => navigate('/')}>
+          Synapse OS
+        </div>
+        <button onClick={toggleMobileMenu} className="text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors">
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Sidebar Navigation - Glassmorphic */}
+      <nav className={`fixed md:relative top-0 left-0 h-full bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border-r border-black/10 dark:border-white/10 flex flex-col items-center py-6 shrink-0 z-40 transition-all duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0 w-20' : '-translate-x-full md:translate-x-0 w-20'} pt-20 md:pt-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(255,255,255,0.02)]`}>
         
-        {/* Logo Mark */}
-        <div className="cursor-pointer mb-10 flex items-center justify-center animate-fade-in bg-transparent w-full px-1" onClick={() => navigate('/')}>
-          <div className="w-14 h-14 bg-contain bg-no-repeat bg-center mix-blend-screen contrast-[1.5] brightness-[1.2]" style={{ backgroundImage: `url(${synapseLogo})` }} />
+        {/* Logo Mark (Desktop) */}
+        <div className="hidden md:flex cursor-pointer mb-10 items-center justify-center bg-transparent w-full px-1 hover:scale-105 transition-transform" onClick={() => navigate('/')}>
+          <div className="font-display font-bold text-2xl text-black dark:text-white tracking-tighter">SOS</div>
         </div>
 
         {/* Top Nav Links */}
-        <div className="flex flex-col gap-6 flex-grow w-full items-center">
+        <div className="flex flex-col gap-4 flex-grow w-full items-center">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  setIsMobileMenuOpen(false);
+                }}
                 title={item.label}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all group relative ${
-                  isActive ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-inner' : 'text-text-tertiary hover:text-cyan-400 hover:bg-cyan-500/10'
+                className={`w-10 h-10 rounded-none flex items-center justify-center transition-colors relative ${
+                  isActive ? 'bg-black/5 dark:bg-white/10 text-black dark:text-white' : 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'
                 }`}
               >
-                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-cyan-500 rounded-r-full" />
+                  <div className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-[3px] h-6 bg-black dark:bg-white" />
                 )}
-                {/* Notification badge */}
                 {item.badge && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse-ring">
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold rounded-full flex items-center justify-center">
                     {item.badge}
                   </div>
                 )}
@@ -82,19 +128,26 @@ const Layout = () => {
         </div>
 
         {/* Agent Status Indicator */}
-        <div className="mb-4 flex flex-col items-center gap-1">
-          <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
-          <span className="text-[8px] text-text-tertiary font-bold tracking-wider">{onlineCount}</span>
+        <div className="mb-6 flex flex-col items-center gap-1.5 cursor-help" title="Active Agents">
+          <div className="relative flex items-center justify-center">
+            <div className="w-2 h-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          </div>
+          <span className="font-mono text-[10px] text-black/50 dark:text-white/50 font-medium">{onlineCount}</span>
         </div>
 
         {/* Bottom Nav Links */}
-        <div className="flex flex-col gap-6 w-full items-center mt-auto">
-          <button className="w-10 h-10 rounded-xl flex items-center justify-center text-text-tertiary hover:text-white hover:bg-white/5 transition-colors">
-            <HeadphonesIcon size={18} />
+        <div className="flex flex-col gap-4 w-full items-center mt-auto pb-4">
+          <button className="w-10 h-10 flex items-center justify-center text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+            <HeadphonesIcon size={20} />
           </button>
+          
+          {/* Dark mode removed entirely */}
           <div 
-            onClick={() => navigate('/app/settings')}
-            className="w-8 h-8 rounded-full bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center cursor-pointer hover:border-cyan-500 transition-colors text-white text-xs font-bold"
+            onClick={() => {
+              navigate('/app/settings');
+              setIsMobileMenuOpen(false);
+            }}
+            className="mt-2 w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 overflow-hidden flex items-center justify-center cursor-pointer hover:border-black/30 dark:hover:border-white/30 transition-colors text-black/70 dark:text-white/70 text-sm font-bold uppercase"
             title="Settings"
           >
             {user?.user_metadata?.full_name?.charAt(0) || 'U'}
@@ -102,15 +155,20 @@ const Layout = () => {
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-y-auto relative bg-transparent text-white/90">
-        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-        <div className="h-full w-full relative z-10">
-          <div className="w-full h-full bg-[#030712]/40 backdrop-blur-xl border border-emerald-500/10 shadow-2xl overflow-hidden relative">
-            <Outlet />
-            <div className={`absolute inset-0 z-50 ${isOrchestrationActive ? 'block' : 'hidden'}`}>
-              <OrchestrationEditor />
-            </div>
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-30 md:hidden transition-colors"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Main Content Area - Transparent so ASCII shows through */}
+      <main className="flex-1 h-full overflow-y-auto relative pt-16 md:pt-0 z-10 bg-transparent">
+        <div className="w-full h-full relative">
+          <Outlet />
+          <div className={`absolute inset-0 z-50 bg-transparent ${isOrchestrationActive ? 'block' : 'hidden'}`}>
+            <OrchestrationEditor />
           </div>
         </div>
       </main>
